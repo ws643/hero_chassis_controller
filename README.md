@@ -1,9 +1,10 @@
-# Package Name
+# hero_chassis_controller
+
 
 ## Overview
 
-This is a template: replace, remove, and add where required. Describe here what this package does and what it's meant
-for in a few sentences.
+hero_chassis_controller is a ros_control controller plugin for the chassis of
+a RoboMaster Hero robot. It drives a four-wheeled mecanum chassis in simulation (Gazebo).
 
 **Keywords:** example, package, template
 

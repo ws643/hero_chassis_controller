@@ -1,20 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
-project(ros_package_template)
+project(hero_chassis_controller)
 
 ## Use C++14
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+#使用 C++14 标准,并且强制要求编译器支持(不支持就报错,而不是悄悄降级)。
 ## By adding -Wall and -Werror, the compiler does not ignore warnings anymore,
 ## enforcing cleaner code.
-add_definitions(-Wall -Werror)
+add_definitions(-Wall -Werror) 
+#- `-Wall`：打开**全部常规编译警告**
+#- `-Werror`：**所有警告直接当成错误**，编译不通过。这是强约束，用来强制代码规范，不允许遗留警告。
+#- `add_definitions`：全局添加编译参数，作用于本包所有源码。
 
 ## Find catkin macros and libraries
-find_package(catkin REQUIRED
-    COMPONENTS
-    roscpp
-    sensor_msgs
-    roslint
+find_package(catkin REQUIRED #`REQUIRED`：缺失则编译终止。
+    COMPONENTS #声明依赖的ROS组件
+    roscpp #ROS C++ 客户端库（节点、发布订阅、服务）
+    sensor_msgs #ROS 传感器消息包（Imu、Joy、LaserScan 等）
+    roslint #ROS 静态代码检查工具（cpplint）
     )
 
 ## Find system libraries
@@ -30,16 +33,19 @@ find_package(Boost REQUIRED)
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
+catkin_package( #`catkin_package()` 是 catkin 核心宏，**给别的包看的导出信息**，别的包依赖这个包时会用到这些信息。
     INCLUDE_DIRS
     include
     ## This is only necessary because Eigen3 sets a non-standard EIGEN3_INCLUDE_DIR variable
     ${EIGEN3_INCLUDE_DIR}
+
     LIBRARIES
     ${PROJECT_NAME}_core
+
     CATKIN_DEPENDS
     roscpp
     sensor_msgs
+    
     DEPENDS
     ## find_package(Eigen3) provides a non standard EIGEN3_INCLUDE_DIR instead of Eigen3_INCLUDE_DIRS.
     ## Therefore, the DEPEND does not work as expected and we need to add the directory to the INCLUDE_DIRS
