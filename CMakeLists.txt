@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(catkin REQUIRED  COMPONENTS 
     roscpp 
     #sensor_msgs 
+    control_toolbox
+    std_msgs
     #roslint  
     controller_interface
     hardware_interface
@@ -32,8 +34,10 @@ catkin_package(
     controller_interface
     hardware_interface
     pluginlib
-    #sensor_msgs
     
+    control_toolbox
+    std_msgs
+
     #DEPENDS
     
 )
