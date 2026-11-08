@@ -3,86 +3,57 @@
 
 ## Overview
 
-hero_chassis_controller is a ros_control controller plugin for the chassis of
+hero_chassis_controller is a ros_control controller plugin(插件) for the chassis(底盘) of
 a RoboMaster Hero robot. It drives a four-wheeled mecanum chassis in simulation (Gazebo).
 
-**Keywords:** example, package, template
+**Keywords:** chassis controller,robomaster,four-wheeled mecanum chassis,ros-control
 
-Or, add some keywords to the Bitbucket or GitHub repository.
-
-### License
+### License 
 
 The source code is released under a [BSD 3-Clause license](LICENSE).
 
-**Author: Péter Fankhauser<br />
-Affiliation: [ANYbotics](https://www.anybotics.com/)<br />
-Maintainer: Péter Fankhauser, pfankhauser@anybotics.com**
+**Author: ws643<br />
+Affiliation: DynamicX<br />
+Maintainer: ws643, 2716823087@qq.com**
 
-The PACKAGE NAME package has been tested under [ROS] Indigo, Melodic and Noetic on respectively Ubuntu 14.04, 18.04 and
-20.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
+Tested under ROS Noetic on Ubuntu 20.04 in docker.
 
-[![Build Status](http://rsl-ci.ethz.ch/buildStatus/icon?job=ros_best_practices)](http://rsl-ci.ethz.ch/job/ros_best_practices/)
 
-![Example image](doc/example.jpg)
 
-[comment]: <> (### Publications)
+## Installation 安装
 
-[comment]: <> (If you use this work in an academic context, please cite the following publication&#40;s&#41;:)
+### Installation from Packages 从软件包安装
 
-[comment]: <> (* P. Fankhauser, M. Bloesch, C. Gehring, M. Hutter, and R. Siegwart: **PAPER TITLE**. IEEE/RSJ International Conference)
-
-[comment]: <> (  on Intelligent Robots and Systems &#40;IROS&#41;, 2015. &#40;[PDF]&#40;http://dx.doi.org/10.3929/ethz-a-010173654&#41;&#41;)
-
-[comment]: <> (        @inproceedings{Fankhauser2015,)
-
-[comment]: <> (            author = {Fankhauser, P\'{e}ter and Hutter, Marco},)
-
-[comment]: <> (            booktitle = {IEEE/RSJ International Conference on Intelligent Robots and Systems &#40;IROS&#41;},)
-
-[comment]: <> (            title = {{PAPER TITLE}},)
-
-[comment]: <> (            publisher = {IEEE},)
-
-[comment]: <> (            year = {2015})
-
-[comment]: <> (        })
-
-## Installation
-
-### Installation from Packages
-
-To install all packages from the this repository as Debian packages use
-
-    sudo apt-get install ros-noetic-...
-
-Or better, use `rosdep`:
+use `rosdep`:
 
 	sudo rosdep install --from-paths src
 
-### Building from Source
+### Building from Source 源码编译
 
-#### Dependencies
+#### Dependencies 依赖
 
 - [Robot Operating System (ROS)](http://wiki.ros.org) (middleware for robotics),
 - [Eigen] (linear algebra library)
+- Ubuntu 20.04 + docker + ROS1
+- rm_msgs
 
   sudo rosdep install --from-paths src
 
-#### Building
+#### Building 编译
 
 To build from source, clone the latest version from this repository into your catkin workspace and compile the package
 using
 
 	cd catkin_workspace/src
-	git clone https://github.com/ethz-asl/ros_best_practices.git
+	git clone https://github.com/ws643/hero_chassis_controller.git
 	cd ../
-	rosdep install --from-paths . --ignore-src
-	catkin_make
+	rosdep install --from-paths src --ignore-src -y
+	catkin build
 
-### Running in Docker
+### Running in Docker Docker中运行
 
-Docker is a great way to run an application with all dependencies and libraries bundles together. Make sure
-to [install Docker](https://docs.docker.com/get-docker/) first.
+Docker is a great way to run an application with all dependencies and libraries bundles together. If your ubuntu system isn't ubuntu 20-04 , please make sure
+to [install Docker](https://docs.docker.com/get-docker/) first and running ubuntu 20.04 in docker otherwise a strange error may be reported.
 
 First, spin up a simple container:
 
@@ -102,35 +73,32 @@ Now, create a catkin workspace, clone the package, build it, done!
 	source devel/setup.bash
 	roslaunch ros_package_template ros_package_template.launch
 
-### Unit Tests
+### Unit Tests 单元测试
 
 Run the unit tests with
 
-	catkin_make run_tests_ros_package_template
+	catkin_make run_tests_hero_chassis_controller
 
-### Static code analysis
+### Static code analysis 静态代码检查
 
+#### if roslint havn't settled yet ,then ignore that part.
 Run the static code analysis with
 
-	catkin_make roslint_ros_package_template
+	catkin_make roslint_hero_chassis_controller
 
-## Usage
+## Usage 使用方法
 
 Describe the quickest way to run this software, for example:
 
 Run the main node with
+	source devel/setup.bash
+	roslaunch hero_chassis_controller hero_chassis_controller.launch
 
-	roslaunch ros_package_template ros_package_template.launch
+## Config files 配置文件
 
-## Config files
+Config file folder/
 
-Config file folder/set 1
-
-* **config_file_1.yaml** Shortly explain the content of this config file
-
-Config file folder/set 2
-
-* **...**
+	default.yaml
 
 ## Launch files
 
