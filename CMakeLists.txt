@@ -35,7 +35,7 @@ catkin_package(
     controller_interface
     hardware_interface
     pluginlib
-    geomrtry_msgs
+    geometry_msgs
     control_toolbox
     std_msgs
 

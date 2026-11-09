@@ -23,6 +23,13 @@ namespace hero_chassis_controller
      //hardware_interface::JointHandle front_left_joint_ , front_right_joint_ , back_left_joint_,back_right_joint_;   
       control_toolbox::Pid pids_[4];
       double target_speed_[4] = {0.0,0.0,0.0,0.0};
+      void CmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg);
+      ros::Subscriber cmd_vel_sub_;
+      double vx_ = 0.0;
+      double vy_ = 0.0;
+      double wz_ = 0.0;
+      double half_length_sum_ = 0.0;
+      double wheel_radius_ = 0.0;
 
       ros::Publisher debug_pub_;
     };
