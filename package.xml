@@ -20,7 +20,7 @@
  
   <!--depend>realtime_tools</depend-->
   <depend>geometry_msgs</depend>
-  <!--depend>nav_msgs</depend-->
+  <depend>nav_msgs</depend>
   <!--depend>tf</depend-->
   <export>
     <controller_interface plugin="${prefix}/hero_chassis_controller_plugins.xml"/>

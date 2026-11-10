@@ -7,6 +7,7 @@
 #include<control_toolbox/pid.h>
 #include<std_msgs/Float64MultiArray.h>
 #include<geometry_msgs/Twist.h>
+#include<nav_msgs/Odometry.h>
 
 
 namespace hero_chassis_controller 
@@ -30,7 +31,11 @@ namespace hero_chassis_controller
       double wz_ = 0.0;
       double half_length_sum_ = 0.0;
       double wheel_radius_ = 0.0;
+      double realvx_ = 0.0;
+      double realvy_ = 0.0;
+      double realwz_ = 0.0;
 
+      ros::Publisher odom_pub_;
       ros::Publisher debug_pub_;
     };
   }

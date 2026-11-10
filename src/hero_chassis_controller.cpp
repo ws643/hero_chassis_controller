@@ -30,6 +30,7 @@ namespace hero_chassis_controller
     }                   /*controller_nh是一个工具包，起点路径是工具之一但是里面还有他自带的函数比如advertise , publish*/
   
    debug_pub_ = controller_nh.advertise<std_msgs::Float64MultiArray>("debug",10);
+   odom_pub_ = controller_nh.advertise<nav_msgs::Odometry>("/odom",10);
    double wheel_track = 0.0;
    double wheel_base = 0.0;
   
@@ -99,6 +100,33 @@ namespace hero_chassis_controller
      }
      debug_pub_.publish(debug);
 
+    realvx_  = (joints_[0].getVelocity()  + joints_[1].getVelocity() + joints_[2].getVelocity() + joints_[3].getVelocity()) * wheel_radius_ / 4.0;
+    realvy_  = (-joints_[0].getVelocity()  + joints_[1].getVelocity() + joints_[2].getVelocity() - joints_[3].getVelocity()) * wheel_radius_ / 4.0;
+    realwz_  = (-joints_[0].getVelocity()  + joints_[1].getVelocity() - joints_[2].getVelocity() + joints_[3].getVelocity()) * wheel_radius_ / (4.0*half_length_sum_);/*可能的报错点*/
+    
+    nav_msgs::Odometry odom;
+
+    odom.header.stamp = time;
+    odom.header.frame_id = "odom";
+    odom.child_frame_id = "base_link";
+
+    odom.pose.pose.position.x = 0.0;
+    odom.pose.pose.position.y = 0.0;
+    odom.pose.pose.position.z = 0.0;
+    odom.pose.pose.orientation.w = 1.0;
+
+    odom.twist.twist.linear.x = realvx_;
+    odom.twist.twist.linear.y = realvy_;
+    odom.twist.twist.linear.z = 0.0;
+    odom.twist.twist.angular.z = realwz_;
+
+    for(int i = 0; i < 36; ++i)
+    {
+      odom.pose.covariance[i] = 0.0;
+      odom.twist.covariance[i] = 0.0;
+    }
+    
+    odom_pub_.publish(odom);
   }
 
 

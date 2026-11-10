@@ -15,6 +15,7 @@ find_package(catkin REQUIRED  COMPONENTS
     hardware_interface
     pluginlib
     geometry_msgs
+    nav_msgs
     )
 
 
@@ -38,6 +39,7 @@ catkin_package(
     geometry_msgs
     control_toolbox
     std_msgs
+    nav_msgs
 
     #DEPENDS
     
