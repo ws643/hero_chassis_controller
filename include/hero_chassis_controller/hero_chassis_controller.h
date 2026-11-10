@@ -1,7 +1,7 @@
 #ifndef HERO_CHASSIS_CONTROLLER_H
 #define HERO_CHASSIS_CONTROLLER_H
 
-#include <controller_interface/controller.h>
+#include <controller_interface/controller.h>/*定位+区分同名文件*/
 #include <hardware_interface/joint_command_interface.h>
 #include <ros/ros.h>
 #include<control_toolbox/pid.h>
@@ -13,14 +13,14 @@ namespace hero_chassis_controller
 {
   class HeroChassisController 
   : public controller_interface::Controller<hardware_interface::EffortJointInterface>
+    /*public继承，父类的PUBILC成员到子类还是变成public*/
   {
     public:
       bool init(hardware_interface::EffortJointInterface* effort_joint_interface , ros::NodeHandle& root_nh , ros::NodeHandle& controller_nh) override;
-      void starting(const ros::Time& time) override;
-      void update(const ros::Time& time, const ros::Duration& period) override;
-    private:
+      void starting(const ros::Time& time) override;/*起始时间*/
+      void update(const ros::Time& time, const ros::Duration& period) override;/*起始时间+距离上一次update的时间间隔*/ 
+      private:
       hardware_interface::JointHandle joints_[4];
-     //hardware_interface::JointHandle front_left_joint_ , front_right_joint_ , back_left_joint_,back_right_joint_;   
       control_toolbox::Pid pids_[4];
       double target_speed_[4] = {0.0,0.0,0.0,0.0};
       void CmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg);
