@@ -2,6 +2,9 @@
 
 #include <pluginlib/class_list_macros.hpp>
 #include<string>
+#include<cmath>
+#include<tf2/LinearMath/Quaternion.h>
+#include<tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 namespace hero_chassis_controller 
 {
@@ -57,28 +60,49 @@ namespace hero_chassis_controller
     vx_ = 0.0;
     vy_ = 0.0;
     wz_ = 0.0;
+    Controller_nh.getParam("a", a);
+    Controller_nh.getParam("which_mode", which_mode_);
   }
   
 
   /*######                回      调       函         数                         ######*/
   void HeroChassisController::CmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg)
   {
-    vx_ = msg->linear.x;
-    vy_ = msg->linear.y;
-    wz_ = msg->angular.z;
+    vx_for_odom_ = msg->linear.x;
+    vy_for_odom_ = msg->linear.y;
+    wz_for_odom_ = msg->angular.z;
   }
-
-
-
+  
+  
+  
   
   void HeroChassisController::update(const ros::Time& time, const ros::Duration& period) 
   {
-    //  for(int i=0 ;i < 4 ;++i)
-    //  {
+    sum++;
+    double dt = period.toSec();
+    if(which_mode_ == false)
+    {
+      vx_ = vx_for_odom_;
+      vy_ = vy_for_odom_;
+      wz_ = wz_for_odom_;
+      double alpha = atan2(vy_for_odom_, vx_for_odom_);
+      vx_ += (a*cos(alpha))*(dt*sum);
+      vy_ += (a*sin(alpha))*(dt*sum);
+      wz_ = wz_for_odom_; 
+      
+    }
+    else
+    {
+      vx_for_odom_ += (a*cos(odom_yaw_))*dt;
+      vy_for_odom_ += (a*sin(odom_yaw_))*dt;
+      vx_ = vx_for_odom_*cos(odom_yaw_) + vy_for_odom_*sin(odom_yaw_);
+      vy_ = -vx_for_odom_*sin(odom_yaw_) + vy_for_odom_*cos(odom_yaw_);
+      wz_ = wz_for_odom_;
+    }
 
-    //   target_speed_[i] = 5.0;
 
-    //  }
+
+    
     const double l = half_length_sum_;
     target_speed_[0] = (vx_ - vy_ - l * wz_) / wheel_radius_;  // front left
     target_speed_[1] = (vx_ + vy_ + l * wz_) / wheel_radius_;  // front right
@@ -102,31 +126,48 @@ namespace hero_chassis_controller
 
     realvx_  = (joints_[0].getVelocity()  + joints_[1].getVelocity() + joints_[2].getVelocity() + joints_[3].getVelocity()) * wheel_radius_ / 4.0;
     realvy_  = (-joints_[0].getVelocity()  + joints_[1].getVelocity() + joints_[2].getVelocity() - joints_[3].getVelocity()) * wheel_radius_ / 4.0;
-    realwz_  = (-joints_[0].getVelocity()  + joints_[1].getVelocity() - joints_[2].getVelocity() + joints_[3].getVelocity()) * wheel_radius_ / (4.0*half_length_sum_);/*可能的报错点*/
+    realwz_  = (-joints_[0].getVelocity()  + joints_[1].getVelocity() - joints_[2].getVelocity() + joints_[3].getVelocity()) * wheel_radius_ / (4.0*half_length_sum_);
+
+    odom_x_ += (realvx_*cos(odom_yaw_) - realvy_*sin(odom_yaw_)) * dt;
+    odom_y_ += (realvx_*sin(odom_yaw_) + realvy_*cos(odom_yaw_)) * dt;
+    odom_yaw_ += realwz_ * dt;
     
     nav_msgs::Odometry odom;
-
-    odom.header.stamp = time;
-    odom.header.frame_id = "odom";
-    odom.child_frame_id = "base_link";
-
-    odom.pose.pose.position.x = 0.0;
-    odom.pose.pose.position.y = 0.0;
-    odom.pose.pose.position.z = 0.0;
-    odom.pose.pose.orientation.w = 1.0;
-
-    odom.twist.twist.linear.x = realvx_;
-    odom.twist.twist.linear.y = realvy_;
-    odom.twist.twist.linear.z = 0.0;
-    odom.twist.twist.angular.z = realwz_;
-
-    for(int i = 0; i < 36; ++i)
-    {
-      odom.pose.covariance[i] = 0.0;
-      odom.twist.covariance[i] = 0.0;
-    }
     
+      odom.header.stamp = time;
+      odom.header.frame_id = "odom";
+      odom.child_frame_id = "base_link";
+    
+      odom.pose.pose.position.x = odom_x_;
+      odom.pose.pose.position.y = odom_y_;
+      odom.pose.pose.position.z = 0.0;
+    
+      tf2::Quaternion msgs;
+      msgs.setRPY(0.0, 0.0, odom_yaw_);
+    
+      odom.pose.pose.orientation = tf2::toMsg(msgs); 
+    
+      odom.twist.twist.linear.x = realvx_;
+      odom.twist.twist.linear.y = realvy_;
+      odom.twist.twist.linear.z = 0.0;
+      odom.twist.twist.angular.z = realwz_;
+    
+
     odom_pub_.publish(odom);
+
+    geometry_msgs::TransformStamped odom_trans;
+      odom_trans.header.stamp = time;
+      odom_trans.header.frame_id = "odom";
+      odom_trans.child_frame_id = "base_link";
+
+
+      odom_trans.transform.translation.x = odom_x_;
+      odom_trans.transform.translation.y = odom_y_;
+      odom_trans.transform.translation.z = 0.0;
+ 
+      odom_trans.transform.rotation = tf2::toMsg(msgs);
+
+    transform_broadcaster_.sendTransform(odom_trans);
   }
 
 

@@ -1,6 +1,7 @@
 controller:
   hero_chassis_controller:
     type: hero_chassis_controller/HeroChassisController
+    which_mode: false
     wheel_radius_: 0.07625
     wheel_track: 0.4
     wheel_base: 0.4
@@ -9,7 +10,7 @@ controller:
        front_right: {p: 2.0, i: 0.0, d: 0.0001, i_clamp_max: 2.0, i_clamp_min: -2.0, antiwindup: true}
        back_left:   {p: 2.0, i: 0.0, d: 0.0001, i_clamp_max: 2.0, i_clamp_min: -2.0, antiwindup: true}
        back_right:  {p: 2.0, i: 0.0, d: 0.0001, i_clamp_max: 2.0, i_clamp_min: -2.0, antiwindup: true}
-
+    a: 0.0
   joint_state_controller:
     type: joint_state_controller/JointStateController
     publish_rate: 50
