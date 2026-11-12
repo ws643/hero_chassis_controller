@@ -3,8 +3,7 @@
 
 ## Overview
 
-hero_chassis_controller is a ros_control controller plugin(插件) for the chassis(底盘) of
-a RoboMaster Hero robot. It drives a four-wheeled mecanum chassis in simulation (Gazebo).
+this program is a controller that using ROS1 to controll an robot named hero , this program can be launched in Gazebo , and can achieve odometry implementation via Mecanum Wheel Forward and Inverse Kinematics
 
 **Keywords:** chassis controller,robomaster,four-wheeled mecanum chassis,ros-control
 
@@ -18,152 +17,70 @@ Maintainer: ws643, 2716823087@qq.com**
 
 Tested under ROS Noetic on Ubuntu 20.04 in docker.
 
+## Features
 
+- Calculates the four target wheel speeds from chassis velocity commands using inverse kinematics.
+- Uses PID controllers to track the target wheel speeds.
+- Calculates chassis velocity from the actual wheel speeds using forward kinematics.
+- Publishes odometry on `/odom` and broadcasts the `odom` to `base_link` transform.
+- Supports chassis-frame and odometry-frame velocity command modes.
+- Supports keyboard control with `teleop_twist_keyboard`.
+- Supports configurable chassis acceleration.
 
-## Installation 安装
+## Requirements
 
-### Installation from Packages 从软件包安装
+- ROS Noetic
+- Gazebo Classic
+- `rm_description_for_task`
+- `teleop_twist_keyboard`
 
-use `rosdep`:
+The package was developed and tested with ROS Noetic in an Ubuntu 20.04 Docker container.
 
-	sudo rosdep install --from-paths src
+## Build
 
-### Building from Source 源码编译
+From the root of your catkin workspace:
 
-#### Dependencies 依赖
+```bash
+cd /catkin_ws
+source /opt/ros/noetic/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
+catkin build hero_chassis_controller
+source /catkin_ws/devel/setup.bash
+```
+## Run the Simulation
 
-- [Robot Operating System (ROS)](http://wiki.ros.org) (middleware for robotics),
-- [Eigen] (linear algebra library)
-- Ubuntu 20.04 + docker + ROS1
-- rm_msgs
+Start the simulation and load the controller:
+```bash
+source /opt/ros/noetic/setup.bash
+source /catkin_ws/devel/setup.bash
+roslaunch hero_chassis_controller hero_chassis_controller.launch
+```
 
-  sudo rosdep install --from-paths src
+The launch file starts Gazebo, spawns the Hero chassis, loads the controller configuration, and starts the chassis and joint-state controllers.
+To stop the simulation, press Ctrl+C in the terminal running roslaunch.
 
-#### Building 编译
 
-To build from source, clone the latest version from this repository into your catkin workspace and compile the package
-using
+## Control the Chassis
 
-	cd catkin_workspace/src
-	git clone https://github.com/ws643/hero_chassis_controller.git
-	cd ../
-	rosdep install --from-paths src --ignore-src -y
-	catkin build
 
-### Running in Docker Docker中运行
+With the simulation running, open another terminal in the same ROS container and run:
+```bash
+source /opt/ros/noetic/setup.bash
+source /catkin_ws/devel/setup.bash
+rosrun teleop_twist_keyboard teleop_twist_keyboard.py _speed:=0.5 _turn:=0.5
+```
 
-Docker is a great way to run an application with all dependencies and libraries bundles together. If your ubuntu system isn't ubuntu 20-04 , please make sure
-to [install Docker](https://docs.docker.com/get-docker/) first and running ubuntu 20.04 in docker otherwise a strange error may be reported.
+The keyboard node publishes velocity commands to /cmd_vel. The chassis controller subscribes to /cmd_vel, calculates the target wheel speeds, and sends commands to the wheel joints.
+Use the keys shown in the terminal to move the chassis. Press Ctrl+C in the keyboard-control terminal to stop the keyboard node.
 
-First, spin up a simple container:
+## Challenge Configuration
+Controller parameters are configured in config/controllers.yaml.
 
-	docker run -ti --rm --name ros-container ros:noetic bash
+ - wheel_radius: wheel radius.
+ - wheel_track: distance between the left and right wheel lines.
+ - wheel_base: distance between the front and rear wheel lines.
+ - pid: PID parameters for the four wheel-speed controllers.
+ - which_mode: selects the velocity-command coordinate frame. false uses the chassis frame; true uses the odometry frame.
+ - a: acceleration setting used by the chassis acceleration feature.
+The controller publishes odometry on /odom using the nav_msgs/Odometry message type. The odometry message describes the robot pose and velocity, with odom as the parent frame and base_link as the child frame. The same frame relationship is broadcast through TF.
 
-This downloads the `ros:noetic` image from the Docker Hub, indicates that it requires an interactive terminal (`-t, -i`)
-, gives it a name (`--name`), removes it after you exit the container (`--rm`) and runs a command (`bash`).
-
-Now, create a catkin workspace, clone the package, build it, done!
-
-	apt-get update && apt-get install -y git
-	mkdir -p /ws/src && cd /ws/src
-	git clone https://github.com/leggedrobotics/ros_best_practices.git
-	cd ..
-	rosdep install --from-path src
-	catkin_make
-	source devel/setup.bash
-	roslaunch ros_package_template ros_package_template.launch
-
-### Unit Tests 单元测试
-
-Run the unit tests with
-
-	catkin_make run_tests_hero_chassis_controller
-
-### Static code analysis 静态代码检查
-
-#### if roslint havn't settled yet ,then ignore that part.
-Run the static code analysis with
-
-	catkin_make roslint_hero_chassis_controller
-
-## Usage 使用方法
-
-Describe the quickest way to run this software, for example:
-
-Run the main node with
-	source devel/setup.bash
-	roslaunch hero_chassis_controller hero_chassis_controller.launch
-
-## Config files 配置文件
-
-Config file folder/
-
-	default.yaml
-
-## Launch files
-
-* **launch_file_1.launch:** shortly explain what is launched (e.g standard simulation, simulation with gdb,...)
-
-  Argument set 1
-
-    - **`argument_1`** Short description (e.g. as commented in launch file). Default: `default_value`.
-
-  Argument set 2
-
-    - **`...`**
-
-* **...**
-
-## Nodes
-
-### ros_package_template
-
-Reads temperature measurements and computed the average.
-
-#### Subscribed Topics
-
-* **`/temperature`** ([sensor_msgs/Temperature])
-
-  The temperature measurements from which the average is computed.
-
-#### Published Topics
-
-...
-
-#### Services
-
-* **`get_average`** ([std_srvs/Trigger])
-
-  Returns information about the current average. For example, you can trigger the computation from the console with
-
-  	rosservice call /ros_package_template/get_average
-
-#### Parameters
-
-* **`subscriber_topic`** (string, default: "/temperature")
-
-  The name of the input topic.
-
-* **`cache_size`** (int, default: 200, min: 0, max: 1000)
-
-  The size of the cache.
-
-### NODE_B_NAME
-
-...
-
-## Bugs & Feature Requests
-
-Please report bugs and request features using the [Issue Tracker](https://github.com/gdut-dynamic-x/rm_template/issues)
-.
-
-
-[ROS]: http://www.ros.org
-
-[rviz]: http://wiki.ros.org/rviz
-
-[Eigen]: http://eigen.tuxfamily.org
-
-[std_srvs/Trigger]: http://docs.ros.org/api/std_srvs/html/srv/Trigger.html
-
-[sensor_msgs/Temperature]: http://docs.ros.org/api/sensor_msgs/html/msg/Temperature.html
