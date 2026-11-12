@@ -43,7 +43,6 @@ namespace hero_chassis_controller
       double odom_y_ = 0.0;
       double odom_z_ = 0.0;
       double odom_yaw_ = 0.0;
-      uint32_t sum = 0.0;
       tf2_ros::TransformBroadcaster transform_broadcaster_;
       ros::Publisher odom_pub_;
       ros::Publisher debug_pub_;
@@ -51,6 +50,10 @@ namespace hero_chassis_controller
       //false表示 ： 输入指令为base_link坐标系下的速度指令
       //true表示 ： 输入指令为odom坐标系下的速度指令
       double a =0.0 ;
+      
+
+
+      ros::Publisher debug_pub1_;
     };
   }
 

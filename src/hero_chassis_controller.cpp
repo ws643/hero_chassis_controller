@@ -34,6 +34,7 @@ namespace hero_chassis_controller
   
    debug_pub_ = controller_nh.advertise<std_msgs::Float64MultiArray>("debug",10);
    odom_pub_ = controller_nh.advertise<nav_msgs::Odometry>("/odom",10);
+   debug_pub1_ = controller_nh.advertise<std_msgs::Float64MultiArray>("debug1",10);
    double wheel_track = 0.0;
    double wheel_base = 0.0;
   
@@ -47,10 +48,12 @@ namespace hero_chassis_controller
    cmd_vel_sub_ = root_nh.subscribe("cmd_vel", 1, &HeroChassisController::CmdVelCallback, this);
    /*     整个机器人上想让底盘动的控制器都能给底盘发指令。先创建订阅者，再发话题（。。绑定回调函数，收到消息就运行这个函数  this指向当前这个控制器对象  */
 
+   controller_nh.getParam("a", a);
+   controller_nh.getParam("which_mode", which_mode_);
    return true;
-
+   
   } /*init结束*/
-
+  
   void HeroChassisController::starting(const ros::Time& time) 
   {
     for(int i = 0 ; i < 4 ; ++i)
@@ -60,8 +63,6 @@ namespace hero_chassis_controller
     vx_ = 0.0;
     vy_ = 0.0;
     wz_ = 0.0;
-    Controller_nh.getParam("a", a);
-    Controller_nh.getParam("which_mode", which_mode_);
   }
   
 
@@ -78,37 +79,77 @@ namespace hero_chassis_controller
   
   void HeroChassisController::update(const ros::Time& time, const ros::Duration& period) 
   {
-    sum++;
     double dt = period.toSec();
-    if(which_mode_ == false)
+
+    double target_vx = vx_for_odom_;
+    double target_vy = vy_for_odom_;
+    double target_wz = wz_for_odom_;
+
+    if(which_mode_ == true)
     {
-      vx_ = vx_for_odom_;
-      vy_ = vy_for_odom_;
-      wz_ = wz_for_odom_;
-      double alpha = atan2(vy_for_odom_, vx_for_odom_);
-      vx_ += (a*cos(alpha))*(dt*sum);
-      vy_ += (a*sin(alpha))*(dt*sum);
-      wz_ = wz_for_odom_; 
-      
+      target_vx = vx_for_odom_*cos(odom_yaw_) + vy_for_odom_*sin(odom_yaw_);
+      target_vy = -vx_for_odom_*sin(odom_yaw_) + vy_for_odom_*cos(odom_yaw_);
+      target_wz = wz_for_odom_; 
+    }
+    
+    if (target_vx >  10.0) 
+    target_vx =  10.0;
+    if (target_vy >  10.0)
+    target_vy =  10.0;
+    
+    double addspeed = a * dt;
+
+    if(a > 0.0)
+    {
+      if(vx_  < target_vx)
+      {
+        vx_ += addspeed;
+        if(vx_ > target_vx)
+        {
+          vx_ = target_vx;
+        }
+      }
+      else if(vx_  > target_vx)
+      {
+        vx_ -= addspeed;
+        if(vx_ < target_vx)
+        {
+          vx_ = target_vx;
+        }
+      }
+      if(vy_  < target_vy)
+      {
+        vy_ += addspeed;
+        if(vy_ > target_vy)
+        {
+          vy_ = target_vy;
+        }
+      }
+      else if(vy_  > target_vy)
+      {
+        vy_ -= addspeed;
+        if(vy_ < target_vy)
+        {
+          vy_ = target_vy;
+        }
+      }
+      wz_ = target_wz;
     }
     else
     {
-      vx_for_odom_ += (a*cos(odom_yaw_))*dt;
-      vy_for_odom_ += (a*sin(odom_yaw_))*dt;
-      vx_ = vx_for_odom_*cos(odom_yaw_) + vy_for_odom_*sin(odom_yaw_);
-      vy_ = -vx_for_odom_*sin(odom_yaw_) + vy_for_odom_*cos(odom_yaw_);
-      wz_ = wz_for_odom_;
+      vx_ = target_vx;
+      vy_ = target_vy;
+      wz_ = target_wz;
     }
 
-
-
-    
+       
     const double l = half_length_sum_;
-    target_speed_[0] = (vx_ - vy_ - l * wz_) / wheel_radius_;  // front left
-    target_speed_[1] = (vx_ + vy_ + l * wz_) / wheel_radius_;  // front right
-    target_speed_[2] = (vx_ + vy_ - l * wz_) / wheel_radius_;  // back left
-    target_speed_[3] = (vx_ - vy_ + l * wz_) / wheel_radius_;  // back right
+    target_speed_[0] = (vx_ - vy_ - l * wz_) / wheel_radius_;  
+    target_speed_[1] = (vx_ + vy_ + l * wz_) / wheel_radius_;  
+    target_speed_[2] = (vx_ + vy_ - l * wz_) / wheel_radius_;  
+    target_speed_[3] = (vx_ - vy_ + l * wz_) / wheel_radius_;  
     std_msgs::Float64MultiArray debug;
+    std_msgs::Float64MultiArray debug1;
     /*创建一个结构体变量名叫debug,这个结构体里有一个名叫data的vector数组和一个描述这个数组的结构体*/
     
 
@@ -127,6 +168,14 @@ namespace hero_chassis_controller
     realvx_  = (joints_[0].getVelocity()  + joints_[1].getVelocity() + joints_[2].getVelocity() + joints_[3].getVelocity()) * wheel_radius_ / 4.0;
     realvy_  = (-joints_[0].getVelocity()  + joints_[1].getVelocity() + joints_[2].getVelocity() - joints_[3].getVelocity()) * wheel_radius_ / 4.0;
     realwz_  = (-joints_[0].getVelocity()  + joints_[1].getVelocity() - joints_[2].getVelocity() + joints_[3].getVelocity()) * wheel_radius_ / (4.0*half_length_sum_);
+
+    debug1.data.push_back(realvx_);
+    debug1.data.push_back(vx_);
+    debug1.data.push_back(realvy_);
+    debug1.data.push_back(vy_);
+    debug1.data.push_back(realwz_);
+    debug1.data.push_back(wz_);
+    debug_pub1_.publish(debug1);
 
     odom_x_ += (realvx_*cos(odom_yaw_) - realvy_*sin(odom_yaw_)) * dt;
     odom_y_ += (realvx_*sin(odom_yaw_) + realvy_*cos(odom_yaw_)) * dt;
